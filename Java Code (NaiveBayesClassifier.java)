@@ -1,0 +1,75 @@
+import java.util.HashMap;
+import java.util.Map;
+
+public class NaiveBayesClassifier {
+
+    public static void main(String[] args) {
+        // Beispiel-Daten: Dokumente und ihre Klassen
+        String[] documents = {
+            "Ich liebe Programmieren",
+            "Programmieren macht Spaß",
+            "Ich mag Fußball",
+            "Fußball ist ein tolles Spiel",
+            "Ich genieße es, Code zu schreiben",
+            "Fußballspiele sind spannend"
+        };
+        String[] labels = {"Technologie", "Technologie", "Sport", "Sport", "Technologie", "Sport"};
+
+        // Trainieren des Klassifikators
+        NaiveBayes nb = new NaiveBayes();
+        nb.train(documents, labels);
+
+        // Klassifikation neuer Dokumente
+        String[] newDocuments = {
+            "Ich liebe Fußball",
+            "Das Programmieren ist mein Hobby"
+        };
+
+        for (String doc : newDocuments) {
+            String category = nb.classify(doc);
+            System.out.println("Dokument: \"" + doc + "\" gehört zur Klasse: " + category);
+        }
+    }
+}
+
+class NaiveBayes {
+    private Map<String, Integer> techWords = new HashMap<>();
+    private Map<String, Integer> sportWords = new HashMap<>();
+    private int techCount = 0;
+    private int sportCount = 0;
+    private int techDocs = 0;
+    private int sportDocs = 0;
+
+    public void train(String[] documents, String[] labels) {
+        for (int i = 0; i < documents.length; i++) {
+            String doc = documents[i];
+            String label = labels[i];
+            String[] words = doc.toLowerCase().split("\\s+");
+
+            if (label.equals("Technologie")) {
+                techDocs++;
+                for (String word : words) {
+                    techWords.put(word, techWords.getOrDefault(word, 0) + 1);
+                }
+            } else {
+                sportDocs++;
+                for (String word : words) {
+                    sportWords.put(word, sportWords.getOrDefault(word, 0) + 1);
+                }
+            }
+        }
+    }
+
+    public String classify(String document) {
+        String[] words = document.toLowerCase().split("\\s+");
+        double techScore = Math.log((double) techDocs / (techDocs + sportDocs));
+        double sportScore = Math.log((double) sportDocs / (techDocs + sportDocs));
+
+        for (String word : words) {
+            techScore += Math.log((techWords.getOrDefault(word, 0) + 1.0) / (techCount + techWords.size()));
+            sportScore += Math.log((sportWords.getOrDefault(word, 0) + 1.0) / (sportCount + sportWords.size()));
+        }
+
+        return techScore > sportScore ? "Technologie" : "Sport";
+    }
+}
